@@ -12,11 +12,6 @@ This is a Streamlit web application that allows users to ask questions in Englis
 
 ---
 
-## 📸 Screenshot
-
-![App Screenshot](link-to-screenshot-if-available)
-
----
 
 ## 🔗 Try the App
 
