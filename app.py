@@ -4,7 +4,7 @@ st.set_page_config(page_title="🌍 Multilingual QA", layout="centered")
 
 # 🚀 Imports
 from transformers import pipeline
-from openai import OpenAI
+import openai
 import os
 
 # 🔐 API Keys (use environment variables or secrets)
@@ -12,7 +12,7 @@ HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")  # Optional: also secure this
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # ✅ Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
+openai.api_key = OPENAI_API_KEY
 
 # 🌍 Supported Output Languages
 language_map = {
@@ -41,7 +41,7 @@ qa_pipeline = load_qa_model()
 def gpt_translate(text, target_language):
     prompt = f"Translate the following answer into {target_language}:\n\n'{text}'"
     try:
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful multilingual assistant."},
