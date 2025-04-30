@@ -1,7 +1,8 @@
 import streamlit as st
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
-from openai import OpenAI
+import openai
 import os
+
 # 🔧 Streamlit Page Config
 st.set_page_config(page_title="🌍 Multilingual QA System", layout="centered")
 st.title("🌍 Multilingual QA with Translation")
@@ -11,8 +12,8 @@ st.markdown("Ask a question and get the answer in your preferred language.")
 HUGGINGFACE_TOKEN = st.secrets["HUGGING_FACE_TOKEN"]
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# ✅ Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
+# ✅ Initialize OpenAI API key
+openai.api_key = OPENAI_API_KEY
 
 # 🌐 Supported Languages
 language_map = {
@@ -52,7 +53,7 @@ qa_pipeline = load_qa_pipeline()
 def gpt_translate(text, target_language):
     prompt = f"Translate the following answer into {target_language}:\n\n'{text}'"
     try:
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful multilingual assistant."},
@@ -61,7 +62,7 @@ def gpt_translate(text, target_language):
             temperature=0.5,
             max_tokens=100
         )
-        return response.choices[0].message.content.strip()
+        return response.choices[0].message["content"].strip()
     except Exception as e:
         st.error(f"Translation error: {str(e)}")
         return text
