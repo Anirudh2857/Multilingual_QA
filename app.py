@@ -53,14 +53,17 @@ qa_pipeline = load_qa_pipeline()
 def gpt_translate(text, target_language):
     prompt = f"Translate the following answer into {target_language}:\n\n'{text}'"
     try:
-        # Using the new method with openai.Completion.create for translation
-        response = openai.Completion.create(
-            model="gpt-4",  # Using GPT-4 for translation
-            prompt=prompt,
+        # Use the v1/chat/completions endpoint for chat models
+        response = openai.ChatCompletion.create(
+            model="gpt-4",  # Ensure using GPT-4
+            messages=[
+                {"role": "system", "content": "You are a helpful multilingual assistant."},
+                {"role": "user", "content": prompt}
+            ],
             temperature=0.5,
             max_tokens=100
         )
-        return response['choices'][0]['text'].strip()
+        return response['choices'][0]['message']['content'].strip()
     except Exception as e:
         st.error(f"Translation error: {str(e)}")
         return text
