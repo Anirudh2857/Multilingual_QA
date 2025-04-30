@@ -1,7 +1,7 @@
 import streamlit as st
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
 from openai import OpenAI
-
+import os
 # 🔧 Streamlit Page Config
 st.set_page_config(page_title="🌍 Multilingual QA System", layout="centered")
 st.title("🌍 Multilingual QA with Translation")
