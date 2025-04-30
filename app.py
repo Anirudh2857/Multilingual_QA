@@ -14,8 +14,8 @@ def load_qa_model():
     try:
         model_name = "Anirudh2857/multilingual-qa-model"
         
-        # Load tokenizer and model
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN)
+        # Load tokenizer and model, explicitly use the non-fast tokenizer
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN, use_fast=False)
         model = AutoModelForQuestionAnswering.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN)
         
         # Create the QA pipeline
