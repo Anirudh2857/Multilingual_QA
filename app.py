@@ -9,9 +9,9 @@ st.markdown("Ask a question and get the answer in your preferred language.")
 
 # 🔐 API Keys from Streamlit secrets
 HUGGINGFACE_TOKEN = st.secrets["HUGGING_FACE_TOKEN"]
-OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# 🤖 Initialize OpenAI client
+# ✅ Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # 🌐 Supported Languages
