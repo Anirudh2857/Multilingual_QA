@@ -15,7 +15,7 @@ This is a Streamlit web application that allows users to ask questions in Englis
 
 ## 🔗 Try the App
 
-👉 [Click here to try the app](https://your-app-url.streamlit.app)  
+👉 [Click here to try the app](https://multilingualapp-keftxtknxesuckmg7hdebi.streamlit.app)  
 <!-- Replace the above with your deployed app URL -->
 
 ---
