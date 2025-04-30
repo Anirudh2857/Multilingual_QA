@@ -10,7 +10,7 @@ st.markdown("Ask a question and get the answer in your preferred language.")
 
 # 🔐 API Keys
 HUGGINGFACE_TOKEN = st.secrets["HUGGING_FACE_TOKEN"]
-OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # 🌍 Language Options
 language_map = {
