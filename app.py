@@ -1,59 +1,68 @@
-import os
 import streamlit as st
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+import os
 
-# Load the OpenAI API key and Hugging Face token from environment variables
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-HUGGING_FACE_TOKEN = os.getenv("HUGGING_FACE_TOKEN")
+# Ensure the Hugging Face token is set in Streamlit secrets
+HUGGING_FACE_TOKEN = st.secrets["HUGGING_FACE_TOKEN"]
 
-# Initialize the question answering pipeline
+# Load OpenAI API key from Streamlit secrets (if needed)
+OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", None)
+
+# Set up Streamlit page configuration
+st.set_page_config(page_title="Multilingual QA System", layout="wide")
+
+# Define the function to load the QA pipeline
 @st.cache_resource
 def load_qa_model():
     """
-    Loads the multilingual question answering model and tokenizer with Hugging Face token for authentication.
+    This function loads the multilingual question answering model and tokenizer
+    with Hugging Face token for authentication.
     """
-    model_name = "Anirudh2857/multilingual-qa-model"  # Update with your model name
+    model_name = "Anirudh2857/multilingual-qa-model"  # Replace with your model name
+
     try:
-        # Ensure the Hugging Face token is available for authentication
+        # Check if Hugging Face token is available
         if not HUGGING_FACE_TOKEN:
-            raise ValueError("Hugging Face token is not set. Please set it in your environment variables.")
-        
-        # Load model and tokenizer using Auto classes with Hugging Face token
+            raise ValueError("Hugging Face token is not set. Please set it in your Streamlit secrets.")
+
+        # Load the model and tokenizer from Hugging Face using the provided token
         model = AutoModelForQuestionAnswering.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN)
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN)
         
-        # Return the pipeline with model and tokenizer
+        # Return the question answering pipeline
         return pipeline("question-answering", model=model, tokenizer=tokenizer)
+
     except Exception as e:
         st.error(f"Error loading model or tokenizer: {e}")
         return None
 
-# Load the question answering pipeline
+# Load the QA pipeline
 qa_pipeline = load_qa_model()
 
-# Set page config
-st.set_page_config(page_title="Multilingual QA System", layout="wide")
-
-# Streamlit app header
+# Title and Instructions for the app
 st.title("Multilingual Question Answering System")
+st.markdown("""
+    ## Instructions:
+    - Type a question in the 'Ask a question' field.
+    - Provide some text context in the 'Provide context for the question' field.
+    - The model will attempt to find an answer from the provided context.
+""")
 
-# Input field for the user to ask questions
+# Input fields for question and context
 question = st.text_input("Ask a question:")
-
-# Input field for the context (could be any text, like a paragraph, for answering)
 context = st.text_area("Provide context for the question:")
 
 # Display the answer when both question and context are provided
 if question and context:
     if qa_pipeline:
         try:
-            # Get the answer from the pipeline
+            # Get the answer using the QA pipeline
             result = qa_pipeline({
                 "context": context,
                 "question": question
             })
             st.subheader("Answer")
-            st.write(result["answer"])  # Show the answer
+            st.write(result["answer"])  # Display the answer
         except Exception as e:
             st.error(f"Error during QA pipeline execution: {e}")
     else:
@@ -61,35 +70,4 @@ if question and context:
 else:
     st.warning("Please enter both a question and context.")
 
-# Optional: Add additional features or instructions here
-st.markdown(
-    """
-    ## Instructions:
-    - Type a question in the 'Ask a question' field.
-    - Provide some text context in the 'Provide context for the question' field.
-    - The model will attempt to find an answer from the provided context.
-    """
-)
-
-# Handle environment and caching
-@st.cache_data
-def load_environment_variables():
-    """
-    Loads environment variables for Streamlit Cloud.
-    """
-    try:
-        if not OPENAI_API_KEY:
-            raise ValueError("OpenAI API Key is not set.")
-        if not HUGGING_FACE_TOKEN:
-            raise ValueError("Hugging Face token is not set.")
-        return OPENAI_API_KEY, HUGGING_FACE_TOKEN
-    except Exception as e:
-        st.error(f"Error loading environment variables: {e}")
-        return None, None
-
-# Ensure the OpenAI API key and Hugging Face token are loaded correctly
-api_key, hf_token = load_environment_variables()
-if api_key and hf_token:
-    st.success("OpenAI API Key and Hugging Face Token are loaded.")
-else:
-    st.warning("API keys are not set properly.")
+# Optional: Add additional features, logs, or information here
