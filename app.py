@@ -1,88 +1,95 @@
-# ✅ Streamlit Setup
-import streamlit as st
-st.set_page_config(page_title="🌍 Multilingual QA", layout="centered")
-
-# 🚀 Imports
-from transformers import pipeline
-import openai
 import os
+import streamlit as st
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 
-# 🔐 API Keys (use environment variables or secrets)
-HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")  # Optional: also secure this
+# Load the OpenAI API key and Hugging Face token from environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+HUGGING_FACE_TOKEN = os.getenv("HUGGING_FACE_TOKEN")
 
-# ✅ Initialize OpenAI client
-openai.api_key = OPENAI_API_KEY
-
-# 🌍 Supported Output Languages
-language_map = {
-    "English": "English",
-    "Hindi": "Hindi",
-    "Spanish": "Spanish",
-    "Arabic": "Arabic",
-    "German": "German",
-    "Vietnamese": "Vietnamese",
-    "Chinese (Simplified)": "Chinese"
-}
-
-# ✅ Load your fine-tuned model from Hugging Face
+# Initialize the question answering pipeline
 @st.cache_resource
 def load_qa_model():
-    return pipeline(
-        "question-answering",
-        model="Anirudh2857/multilingual-qa-model",  # Replace with your HF model repo
-        tokenizer="Anirudh2857/multilingual-qa-model",
-        use_auth_token=HUGGINGFACE_TOKEN
-    )
+    """
+    Loads the multilingual question answering model and tokenizer with Hugging Face token for authentication.
+    """
+    model_name = "Anirudh2857/multilingual-qa-model"  # Update with your model name
+    try:
+        # Ensure the Hugging Face token is available for authentication
+        if not HUGGING_FACE_TOKEN:
+            raise ValueError("Hugging Face token is not set. Please set it in your environment variables.")
+        
+        # Load model and tokenizer using Auto classes with Hugging Face token
+        model = AutoModelForQuestionAnswering.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN)
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN)
+        
+        # Return the pipeline with model and tokenizer
+        return pipeline("question-answering", model=model, tokenizer=tokenizer)
+    except Exception as e:
+        st.error(f"Error loading model or tokenizer: {e}")
+        return None
 
+# Load the question answering pipeline
 qa_pipeline = load_qa_model()
 
-# 🔁 GPT Translation
-def gpt_translate(text, target_language):
-    prompt = f"Translate the following answer into {target_language}:\n\n'{text}'"
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful multilingual assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.5,
-            max_tokens=100
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        st.error(f"GPT Translation Error: {str(e)}")
-        return text
+# Set page config
+st.set_page_config(page_title="Multilingual QA System", layout="wide")
 
-# 🖼️ Streamlit Interface
-st.title(":globe_with_meridians: Multilingual QA")
-st.markdown("Ask a question and get the answer in your preferred language.")
+# Streamlit app header
+st.title("Multilingual Question Answering System")
 
-question = st.text_input("❓ Enter your **question**:")
-context = st.text_area("📄 Enter the **context passage**:")
-qa_lang = st.selectbox("🌐 Language for QA output:", list(language_map.keys()), key="qa_lang")
-submit = st.button("Get Answer")
+# Input field for the user to ask questions
+question = st.text_input("Ask a question:")
 
-# 🚀 Inference
-if submit:
-    if not question.strip() or not context.strip():
-        st.warning("❗ Please enter both a question and a context.")
+# Input field for the context (could be any text, like a paragraph, for answering)
+context = st.text_area("Provide context for the question:")
+
+# Display the answer when both question and context are provided
+if question and context:
+    if qa_pipeline:
+        try:
+            # Get the answer from the pipeline
+            result = qa_pipeline({
+                "context": context,
+                "question": question
+            })
+            st.subheader("Answer")
+            st.write(result["answer"])  # Show the answer
+        except Exception as e:
+            st.error(f"Error during QA pipeline execution: {e}")
     else:
-        with st.spinner("Thinking... 🧠"):
-            try:
-                result = qa_pipeline(question=question, context=context)
-                original_answer = result["answer"]
-                confidence = round(result["score"] * 100, 2)
+        st.error("Failed to load QA pipeline.")
+else:
+    st.warning("Please enter both a question and context.")
 
-                translated_answer = gpt_translate(original_answer, language_map[qa_lang])
+# Optional: Add additional features or instructions here
+st.markdown(
+    """
+    ## Instructions:
+    - Type a question in the 'Ask a question' field.
+    - Provide some text context in the 'Provide context for the question' field.
+    - The model will attempt to find an answer from the provided context.
+    """
+)
 
-                st.markdown("### ✅ Original Answer:")
-                st.success(original_answer)
-                st.caption(f"📊 Confidence Score: {confidence}%")
+# Handle environment and caching
+@st.cache_data
+def load_environment_variables():
+    """
+    Loads environment variables for Streamlit Cloud.
+    """
+    try:
+        if not OPENAI_API_KEY:
+            raise ValueError("OpenAI API Key is not set.")
+        if not HUGGING_FACE_TOKEN:
+            raise ValueError("Hugging Face token is not set.")
+        return OPENAI_API_KEY, HUGGING_FACE_TOKEN
+    except Exception as e:
+        st.error(f"Error loading environment variables: {e}")
+        return None, None
 
-                st.markdown(f"### 🌐 Translated Answer ({qa_lang}):")
-                st.info(translated_answer)
-
-            except Exception as e:
-                st.error(f"🚫 Error: {str(e)}")
+# Ensure the OpenAI API key and Hugging Face token are loaded correctly
+api_key, hf_token = load_environment_variables()
+if api_key and hf_token:
+    st.success("OpenAI API Key and Hugging Face Token are loaded.")
+else:
+    st.warning("API keys are not set properly.")
