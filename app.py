@@ -1,12 +1,9 @@
 import streamlit as st
-from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+from transformers import XLMRobertaForQuestionAnswering, XLMRobertaTokenizer, pipeline
 import os
 
 # Ensure the Hugging Face token is set in Streamlit secrets
 HUGGING_FACE_TOKEN = st.secrets["HUGGING_FACE_TOKEN"]
-
-# Load OpenAI API key from Streamlit secrets (if needed)
-OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", None)
 
 # Set up Streamlit page configuration
 st.set_page_config(page_title="Multilingual QA System", layout="wide")
@@ -18,7 +15,7 @@ def load_qa_model():
     This function loads the multilingual question answering model and tokenizer
     with Hugging Face token for authentication.
     """
-    model_name = "Anirudh2857/multilingual-qa-model"  # Replace with your model name
+    model_name = "Anirudh2857/multilingual-qa-model"  # Replace with your model
 
     try:
         # Check if Hugging Face token is available
@@ -26,9 +23,9 @@ def load_qa_model():
             raise ValueError("Hugging Face token is not set. Please set it in your Streamlit secrets.")
 
         # Load the model and tokenizer from Hugging Face using the provided token
-        model = AutoModelForQuestionAnswering.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN)
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN)
-        
+        model = XLMRobertaForQuestionAnswering.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN)
+        tokenizer = XLMRobertaTokenizer.from_pretrained(model_name, use_auth_token=HUGGING_FACE_TOKEN)
+
         # Return the question answering pipeline
         return pipeline("question-answering", model=model, tokenizer=tokenizer)
 
@@ -69,5 +66,3 @@ if question and context:
         st.error("Failed to load QA pipeline.")
 else:
     st.warning("Please enter both a question and context.")
-
-# Optional: Add additional features, logs, or information here
